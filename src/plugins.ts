@@ -2524,6 +2524,15 @@ export const plugins: PluginInfoBase[] = [
     discoverReleases: true,
   },
   {
+    repo: 'luciferer/zotero-open-router',
+    releases: [],
+    tags: [
+      'attachment',
+      'reader',
+    ],
+    discoverReleases: true,
+  },
+  {
     repo: 'Lyz-623/JournalLens',
     releases: [
       {
