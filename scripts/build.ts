@@ -26,7 +26,12 @@ fs.outputJSONSync('dist/external-plugins.json', external)
 fs.removeSync('dist/collector')
 let collectorFailure: string | undefined
 try {
-  execFileSync(execPath, ['--import', 'tsx', 'src/index.ts', 'fetchPlugins'], {
+  execFileSync(execPath, [
+    '--import',
+    'tsx',
+    'src/index.ts',
+    'fetchPlugins',
+  ], {
     stdio: 'inherit',
     env: { ...env, COLLECTOR_DIST: 'dist/collector' },
   })
@@ -34,15 +39,25 @@ try {
 catch {
   collectorFailure = 'Collector process failed; inspect build log'
 }
-const collected = fs.existsSync('dist/collector/plugins.json') ? fs.readJSONSync('dist/collector/plugins.json') : []
+const collected = fs.existsSync('dist/collector/plugins.json')
+  ? fs.readJSONSync('dist/collector/plugins.json')
+  : []
 const fetchReport: FetchReport = fs.existsSync('dist/collector/fetch-report.json')
   ? fs.readJSONSync('dist/collector/fetch-report.json')
-  : { requested: plugins.length + deprecatedPlugins.length, refreshed: [], pending: [], errors: [] }
+  : {
+      requested: plugins.length + deprecatedPlugins.length,
+      refreshed: [],
+      pending: [],
+      errors: [],
+    }
 const report = {
   checkedAt: new Date().toISOString(),
   mode,
   collectorFailure,
-  ...compareCatalog([...plugins, ...deprecatedPlugins], external, collected),
+  ...compareCatalog([
+    ...plugins,
+    ...deprecatedPlugins,
+  ], external, collected),
   fetchErrors: fetchReport.errors,
   pendingSources: fetchReport.pending,
 }
@@ -54,9 +69,21 @@ if (env.GITHUB_STEP_SUMMARY) {
 if (mode === 'primary' && !ready)
   throw new Error('Primary promotion blocked: inspect dist/comparison.json')
 // Shadow mode keeps existing output while making the collector candidate reviewable.
-const storePlugins = filterStorePlugins(mode === 'primary' ? collected : external, [...plugins, ...deprecatedPlugins, ...collected])
+const storePlugins = filterStorePlugins(mode === 'primary'
+  ? collected
+  : external, [
+  ...plugins,
+  ...deprecatedPlugins,
+  ...collected,
+])
 fs.outputJSONSync('dist/plugins.json', storePlugins)
-fs.outputJSONSync('dist/shields.json', { lastUpdate: new Date().toISOString(), source: mode === 'primary' ? 'zotero-chinese/zotero-plugins' : 'syt2/zotero-addons-scraper', mode })
+fs.outputJSONSync('dist/shields.json', {
+  lastUpdate: new Date().toISOString(),
+  source: mode === 'primary'
+    ? 'zotero-chinese/zotero-plugins'
+    : 'syt2/zotero-addons-scraper',
+  mode,
+})
 const charts = await ofetch('https://raw.githubusercontent.com/zotero-chinese/zotero-plugins/gh-pages/charts.json', {
   responseType: 'json',
   timeout: 60000,
